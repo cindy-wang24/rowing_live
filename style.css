@@ -46,10 +46,6 @@ button:hover {
   margin-top: 20px;
 }
 
-#canvas, #results {
-  display: none;   /* fully hidden at first */
-  border: none;    /* ensure no border appears */
-}
 #canvas {
   max-width: 80%;
   border-radius: 10px; /* optional rounded corners */
