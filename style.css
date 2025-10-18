@@ -43,11 +43,6 @@ button:hover {
   width: 100%;
 }
 
-#canvas,
-#results {
-  display: none; /* hidden before start */
-}
-
 #canvas {
   width: 100%;
   height: auto;
