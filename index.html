@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rowing Pose Analyzer (Live)</title>
+  <title>Rowing Pose Analyzer</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- MediaPipe scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>Rowing Pose Analyzer (Live)</h1>
+    <h1>Rowing Pose Analyzer</h1>
     <button id="startBtn">Start Camera</button>
-    <p id="status"></p>
 
     <div class="output">
-      <video id="inputVideo" playsinline style="display:none;"></video>
-      <canvas id="canvas"></canvas>
-      <pre id="results"></pre>
+      <video id="inputVideo"></video> <!-- hidden video input -->
+      <canvas id="canvas"></canvas>   <!-- mirrored video + landmarks -->
+      <pre id="results"></pre>       <!-- feedback -->
     </div>
   </div>
 

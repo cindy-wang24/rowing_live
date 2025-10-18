@@ -39,25 +39,28 @@ button:hover {
 }
 
 .output {
-  display: flex;            /* use flex layout */
-  flex-direction: column;   /* stack children vertically */
-  align-items: center;      /* center everything horizontally */
-  width: 100%;              /* take full width */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   margin-top: 20px;
 }
 
+/* Hidden at first */
+#canvas, #results, #inputVideo {
+  display: none;
+}
+
 #canvas {
-  display: block;           /* ensures it’s on its own line */
-  max-width: 80%;           /* responsive width */
+  max-width: 80%;
   border: 2px solid white;
   border-radius: 10px;
 }
 
 #results {
-  display: block;           
-  margin-top: 15px;         
+  margin-top: 15px;
   font-size: 20px;
-  max-width: 80%;           
+  max-width: 80%;
   background-color: #111;
   padding: 15px;
   border-radius: 10px;
@@ -66,4 +69,20 @@ button:hover {
   white-space: pre-wrap;
   overflow-y: auto;
   max-height: 500px;
+}
+
+#startBtn {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  cursor: pointer;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  transition: 0.2s;
+  margin-bottom: 20px;
+}
+
+#startBtn:hover {
+  background-color: #ddd;
 }

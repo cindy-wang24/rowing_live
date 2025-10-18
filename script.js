@@ -22,22 +22,21 @@ pose.setOptions({
 
 pose.onResults(onResults);
 
-// --- Start button handler ---
+// --- Start button ---
 startBtn.addEventListener("click", async () => {
-  startBtn.style.display = "none";
-  resultsEl.textContent = "Starting camera...";
-  videoEl.style.display = "none";  // hide raw webcam
-  canvasEl.style.display = "block"; // show canvas with landmarks
+  startBtn.style.display = "none";      // hide Start button
+  canvasEl.style.display = "block";     // show canvas
+  resultsEl.style.display = "block";    // show feedback
 
   camera = new Camera(videoEl, {
     onFrame: async () => {
-      // draw mirrored video frame on canvas
+      // mirrored video frame
       canvasEl.width = videoEl.videoWidth;
       canvasEl.height = videoEl.videoHeight;
 
       ctx.save();
       ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-      ctx.scale(-1, 1); // flip horizontally
+      ctx.scale(-1, 1); // mirror
       ctx.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
       ctx.restore();
 
@@ -50,7 +49,7 @@ startBtn.addEventListener("click", async () => {
   camera.start();
 });
 
-// --- Helper: extract landmark coordinates ---
+// --- Extract key landmarks ---
 function extractKeyLandmarks(landmarks, width, height) {
   const keypoints = {
     nose: 0, wrist_l: 15, wrist_r: 16,
@@ -67,7 +66,7 @@ function extractKeyLandmarks(landmarks, width, height) {
   return extracted;
 }
 
-// --- Helper: calculate angle between three points ---
+// --- Calculate angle ---
 function angle(p1, mid, p2) {
   const v1 = [p1[0] - mid[0], -(p1[1] - mid[1])];
   const v2 = [p2[0] - mid[0], -(p2[1] - mid[1])];
@@ -77,17 +76,14 @@ function angle(p1, mid, p2) {
   return Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
 }
 
-// --- Rowing analysis ---
+// --- Rowing feedback ---
 function analyzeRowing(keypoints) {
-  const nose = keypoints.nose;
   const wrist = keypoints.wrist_r;
   const shoulder = keypoints.shoulder_r;
   const hip = keypoints.hip_r;
-  const knee = keypoints.knee_r;
   const elbow = keypoints.r_elbow;
 
   let suggestion = "";
-
   const angleSEW = angle(shoulder, elbow, wrist);
   const angleHSW = angle(hip, shoulder, wrist);
 
@@ -125,11 +121,10 @@ function analyzeRowing(keypoints) {
 function onResults(results) {
   if (!results.poseLandmarks) {
     resultsEl.textContent = "No person detected.";
-    resultsEl.style.display = "block";
     return;
   }
 
-  // Mirror landmarks for correct overlay
+  // flip landmarks for mirrored overlay
   const width = canvasEl.width;
   const flippedLandmarks = results.poseLandmarks.map(lm => ({
     x: 1 - lm.x,
@@ -142,12 +137,11 @@ function onResults(results) {
   drawLandmarks(ctx, flippedLandmarks, { color: "red", lineWidth: 2 });
 
   const now = Date.now();
-  if (now - lastUpdateTime >= 2000) {
+  if (now - lastUpdateTime >= 2000) { // update feedback every 2 seconds
     const keypoints = extractKeyLandmarks(flippedLandmarks, width, canvasEl.height);
     latestSuggestion = analyzeRowing(keypoints);
     lastUpdateTime = now;
   }
 
   resultsEl.textContent = latestSuggestion;
-  resultsEl.style.display = "block";
 }
