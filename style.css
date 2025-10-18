@@ -54,7 +54,7 @@ button:hover {
 }
 
 #results {
-  display: none;           
+  display: block;           
   margin-top: 15px;         
   font-size: 20px;
   max-width: 80%;           
@@ -66,10 +66,4 @@ button:hover {
   white-space: pre-wrap;
   overflow-y: auto;
   max-height: 500px;
-}
-video {
-  transform: scaleX(-1);
-  display: block;
-  margin: 0 auto;
-  border-radius: 10px;
 }
