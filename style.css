@@ -46,22 +46,22 @@ button:hover {
   margin-top: 20px;
 }
 
+#canvas, #results {
+  display: none;   /* fully hidden at first */
+  border: none;    /* ensure no border appears */
+}
 #canvas {
-  display: none;       /* hidden initially */
   max-width: 80%;
-  border: none;        /* remove the white border */
   border-radius: 10px; /* optional rounded corners */
 }
 
 #results {
-  display: none;       /* hidden initially */
   margin-top: 15px;
   font-size: 20px;
   max-width: 80%;
   background-color: #111;
   padding: 15px;
   border-radius: 10px;
-  border: none;        /* remove the white border */
   text-align: left;
   white-space: pre-wrap;
   overflow-y: auto;
