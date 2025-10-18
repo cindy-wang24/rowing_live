@@ -4,21 +4,20 @@
   <meta charset="UTF-8">
   <title>Rowing Pose Analyzer</title>
   <link rel="stylesheet" href="style.css">
-  <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 </head>
 <body>
   <div class="container">
     <h1>Rowing Pose Analyzer</h1>
-    <button id="startBtn">Start Camera</button>
+    <button id="startBtn">Start</button>
 
     <div class="output">
-      <video id="inputVideo"></video>
       <canvas id="canvas"></canvas>
       <pre id="results"></pre>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>

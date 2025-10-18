@@ -12,19 +12,19 @@ body {
 }
 
 .container {
-  width: 90%;
-  max-width: 900px;
+  width: 95%;
+  max-width: 1200px;
 }
 
 h1 {
-  font-size: 4em;
+  font-size: 3em;
   font-weight: bold;
   margin-bottom: 20px;
 }
 
 button {
   font-size: 1.2em;
-  padding: 15px 30px;
+  padding: 12px 25px;
   cursor: pointer;
   background-color: white;
   color: black;
@@ -46,28 +46,30 @@ button:hover {
   margin-top: 20px;
 }
 
-/* Hide initially and remove borders */
-#canvas, #results, #inputVideo {
-  display: none;
+#canvas, #results {
+  display: none; /* hidden initially */
   border: none;
   outline: none;
   box-shadow: none;
 }
 
 #canvas {
-  max-width: 80%;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   border-radius: 0;
 }
 
 #results {
   margin-top: 15px;
   font-size: 20px;
-  max-width: 80%;
+  max-width: 100%;
+  width: 100%;
   background-color: #111;
   padding: 15px;
   border-radius: 0;
   text-align: left;
   white-space: pre-wrap;
   overflow-y: auto;
-  max-height: 500px;
+  max-height: 250px;
 }

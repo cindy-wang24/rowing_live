@@ -1,12 +1,11 @@
 const startBtn = document.getElementById("startBtn");
-const videoEl = document.createElement("video");
-videoEl.style.display = "none"; // hidden input video
-videoEl.autoplay = true;
-videoEl.playsInline = true;
-
 const canvasEl = document.getElementById("canvas");
 const resultsEl = document.getElementById("results");
 const ctx = canvasEl.getContext("2d");
+const videoEl = document.createElement("video");
+videoEl.autoplay = true;
+videoEl.playsInline = true;
+videoEl.style.display = "none";
 
 let lastUpdateTime = 0;
 let latestSuggestion = "Waiting for pose...";
@@ -21,32 +20,23 @@ pose.setOptions({
 });
 pose.onResults(onResults);
 
-// --- Start button ---
+// --- Start button click ---
 startBtn.addEventListener("click", async () => {
-  // Get webcam
+  startBtn.style.display = "none";       // hide start button
+  canvasEl.style.display = "block";      // show canvas
+  resultsEl.style.display = "block";     // show feedback
+
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   videoEl.srcObject = stream;
 
-  // Wait for video to load metadata
   videoEl.onloadedmetadata = () => {
-    // Scale canvas to container width
     const containerWidth = canvasEl.parentElement.clientWidth;
     const aspect = videoEl.videoHeight / videoEl.videoWidth;
     canvasEl.width = containerWidth;
     canvasEl.height = containerWidth * aspect;
 
-    // Now we can show canvas and feedback
-    canvasEl.style.display = "block";
-    resultsEl.style.display = "block";
-
-    // Hide start button
-    startBtn.style.display = "none";
-
-    // Start MediaPipe camera
     const camera = new Camera(videoEl, {
-      onFrame: async () => {
-        await pose.send({ image: videoEl });
-      },
+      onFrame: async () => await pose.send({ image: videoEl }),
       width: videoEl.videoWidth,
       height: videoEl.videoHeight
     });
@@ -54,7 +44,7 @@ startBtn.addEventListener("click", async () => {
   };
 });
 
-// --- Extract key landmarks ---
+// --- Helper functions ---
 function extractKeyLandmarks(landmarks, width, height) {
   const keypoints = {
     nose: 0, wrist_r: 16, shoulder_r: 12,
@@ -67,7 +57,6 @@ function extractKeyLandmarks(landmarks, width, height) {
   return extracted;
 }
 
-// --- Angle function ---
 function angle(p1, mid, p2) {
   const v1 = [p1[0]-mid[0], -(p1[1]-mid[1])];
   const v2 = [p2[0]-mid[0], -(p2[1]-mid[1])];
@@ -77,7 +66,6 @@ function angle(p1, mid, p2) {
   return Math.acos(dot / (mag1 * mag2)) * 180/Math.PI;
 }
 
-// --- Analyze rowing ---
 function analyzeRowing(keypoints) {
   const wrist = keypoints.wrist_r;
   const shoulder = keypoints.shoulder_r;
@@ -105,22 +93,18 @@ function analyzeRowing(keypoints) {
   return suggestion;
 }
 
-// --- MediaPipe results ---
+// --- MediaPipe results handler ---
 function onResults(results) {
   if (!results.poseLandmarks) {
     resultsEl.textContent = "No person detected.";
     return;
   }
 
-  // Draw landmarks
-  ctx.save();
-  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
-  ctx.drawImage(results.image,0,0,canvasEl.width,canvasEl.height);
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  ctx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
   drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color:'white', lineWidth:3});
   drawLandmarks(ctx, results.poseLandmarks, {color:'red', lineWidth:2});
-  ctx.restore();
 
-  // Update feedback every 2 seconds
   const now = Date.now();
   if (now - lastUpdateTime >= 2000) {
     const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
