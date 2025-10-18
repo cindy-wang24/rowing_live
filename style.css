@@ -67,3 +67,9 @@ button:hover {
   overflow-y: auto;
   max-height: 500px;
 }
+video {
+  transform: scaleX(-1);
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+}

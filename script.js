@@ -1,42 +1,45 @@
-const uploadBtn = document.getElementById("uploadBtn");
-const canvas = document.getElementById("canvas");
+const startBtn = document.getElementById("startBtn");
+const videoEl = document.getElementById("inputVideo");
+const canvasEl = document.getElementById("canvas");
 const resultsEl = document.getElementById("results");
+const ctx = canvasEl.getContext("2d");
 
-// Hidden file input
-const imageInput = document.createElement("input");
-imageInput.type = "file";
-imageInput.accept = "image/*";
+let camera = null;
+let lastUpdateTime = 0;
+let latestSuggestion = "Waiting for pose...";
 
-// MediaPipe Pose
-const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+// --- Initialize MediaPipe Pose ---
+const pose = new Pose({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
+});
+
 pose.setOptions({
   modelComplexity: 1,
   smoothLandmarks: true,
   minDetectionConfidence: 0.5,
-  minTrackingConfidence: 0.5
+  minTrackingConfidence: 0.5,
 });
+
 pose.onResults(onResults);
 
-// Click triggers hidden file input
-uploadBtn.addEventListener("click", () => imageInput.click());
+// --- Start button handler ---
+startBtn.addEventListener("click", async () => {
+  startBtn.style.display = "none";
+  resultsEl.textContent = "Starting camera...";
+  videoEl.style.display = "block";
 
-imageInput.addEventListener("change", () => {
-  const file = imageInput.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    pose.send({image: canvas});
-  };
-  img.src = URL.createObjectURL(file);
-  canvas.style.display = "block";
+  camera = new Camera(videoEl, {
+    onFrame: async () => {
+      await pose.send({ image: videoEl });
+    },
+    width: 640,
+    height: 480,
+  });
+
+  camera.start();
 });
 
-// --- Helper functions ---
-
+// --- Helper: extract landmark coordinates ---
 function extractKeyLandmarks(landmarks, width, height) {
   const keypoints = {
     nose: 0, wrist_l: 15, wrist_r: 16,
@@ -53,89 +56,83 @@ function extractKeyLandmarks(landmarks, width, height) {
   return extracted;
 }
 
+// --- Helper: calculate angle between three points ---
 function angle(p1, mid, p2) {
-  const v1 = [p1[0]-mid[0], -(p1[1]-mid[1])];
-  const v2 = [p2[0]-mid[0], -(p2[1]-mid[1])];
-  const dot = v1[0]*v2[0] + v1[1]*v2[1];
+  const v1 = [p1[0] - mid[0], -(p1[1] - mid[1])];
+  const v2 = [p2[0] - mid[0], -(p2[1] - mid[1])];
+  const dot = v1[0] * v2[0] + v1[1] * v2[1];
   const mag1 = Math.hypot(v1[0], v1[1]);
   const mag2 = Math.hypot(v2[0], v2[1]);
   return Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
 }
 
+// --- Rowing analysis (your criteria) ---
 function analyzeRowing(keypoints) {
-  let results = "";
   const nose = keypoints.nose;
-  const r_ankle = keypoints.ankle_r;
-  const l_ankle = keypoints.ankle_l;
+  const wrist = keypoints.wrist_r;
+  const shoulder = keypoints.shoulder_r;
+  const hip = keypoints.hip_r;
+  const knee = keypoints.knee_r;
+  const elbow = keypoints.r_elbow;
 
-  let elbow, knee, hip, shoulder, wrist, ankle;
+  let suggestion = "";
 
-  // Determine facing direction
-  if (nose[0] < r_ankle[0] && nose[0] < l_ankle[0]) {
-    elbow = keypoints.r_elbow; knee = keypoints.knee_r; hip = keypoints.hip_r;
-    shoulder = keypoints.shoulder_r; wrist = keypoints.wrist_r; ankle = keypoints.ankle_r;
+  const angleSEW = angle(shoulder, elbow, wrist);
+  const angleHSW = angle(hip, shoulder, wrist);
+
+  // “Great Rowing” checks
+  if (
+    Math.abs(elbow[0] - shoulder[0]) < Math.abs(elbow[1] - shoulder[1]) &&
+    angleSEW > 180 &&
+    Math.abs(wrist[1] - hip[1]) < 0.7 * Math.abs(wrist[1] - shoulder[1])
+  ) {
+    suggestion = "Great Rowing!";
+  } else if (
+    Math.abs(elbow[0] - shoulder[0]) > Math.abs(elbow[1] - shoulder[1]) &&
+    angleSEW < 70 &&
+    Math.abs(wrist[1] - hip[1]) > Math.abs(wrist[1] - shoulder[1])
+  ) {
+    suggestion = "Great Rowing!";
   } else {
-    elbow = keypoints.l_elbow; knee = keypoints.knee_l; hip = keypoints.hip_l;
-    shoulder = keypoints.shoulder_l; wrist = keypoints.wrist_l; ankle = keypoints.ankle_l;
-  }
-
-  // New, browser-friendly thresholds
-  const not_stand = Math.abs(shoulder[1]-hip[1]) / Math.abs(hip[1]-ankle[1]) > 0.5; 
-  const height = elbow[1] < hip[1] && elbow[1] < ankle[1] && wrist[1] < ankle[1];
-  const not_lay = Math.abs(nose[1]-knee[1]) / Math.abs(knee[0]-hip[0]) < 2.0;        
-  const knee_angle = angle(ankle, knee, hip);
-  const hip_angle = angle(shoulder, hip, knee);
-  const not_sit = knee_angle > 100 || knee_angle < 80;                               
-  const is_row = not_stand && height && not_lay && not_sit;
-
-  
-  // Add all booleans for debugging / inspection
-//   results += `not_stand: ${not_stand}\n`;
-//   results += `height: ${height}\n`;
-//   results += `not_lay: ${not_lay}\n`;
-//   results += `not_sit: ${not_sit}\n`;
-//   results += `knee_angle: ${knee_angle.toFixed(1)}\n`;
-//   results += `hip_angle: ${hip_angle.toFixed(1)}\n\n`;
-//   results +=Math.abs(wrist[1]-hip[1]) +'\n';
-//   results +=Math.abs(wrist[1]-shoulder[1])+'\n';
-  if (is_row) {
-    if (knee_angle < 100) {
-    //   results += "The person is at the catch.\n";
-      if (Math.abs(elbow[0]-knee[0]) > Math.abs(knee[0]-ankle[0])) {
-        if (hip_angle < 50) results += "Straighten your back and lean less forward at the catch.\n";
-        else results += "Lean forward at the catch.\n";
-      }
-    } else if (knee_angle > 150) {
-    //   results += "The person is at the finish.\n";
-      if (Math.abs(knee[0]-elbow[0]) < Math.abs(elbow[0]-shoulder[0])) results += "Place your hands close to your chest at the finish.\n";
-      if (Math.abs(wrist[1]-hip[1]) > Math.abs(wrist[1]-shoulder[1])) results += "Place your wrists lower at the finish.\n";
-    } else {
-    //   results += "This person is between catch and finish.\n";
-      if (hip_angle > 80) results += "Lean forward as you approach the catch.\n";
+    if (angleSEW < 90 && angleHSW < 30) {
+      suggestion = "Lift your elbows 45° from your sides.";
+    } else if (
+      angleSEW < 90 &&
+      Math.abs(wrist[1] - hip[1]) > 0.7 * Math.abs(hip[1] - shoulder[1])
+    ) {
+      suggestion = "Lean forward as your hands approach the front.";
+    } else if (angleSEW > 150) {
+      suggestion = "Keep your arms straight as you approach the front.";
     }
-  } else {
-    results += "The person is not rowing.\n";
   }
-  if (results===''){
-    results='Your rowing is great!';
-  }
-  return results;
+
+  return suggestion;
 }
 
-// --- MediaPipe results handler ---
+// --- MediaPipe Results (called every frame) ---
 function onResults(results) {
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(results.image, 0, 0);
+  canvasEl.width = results.image.width;
+  canvasEl.height = results.image.height;
 
-  if (!results.poseLandmarks) {
-    resultsEl.textContent = "No person detected in the image.";
-    return;
+  ctx.save();
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  ctx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
+
+  if (results.poseLandmarks) {
+    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: "white", lineWidth: 3 });
+    drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
+
+    const now = Date.now();
+    if (now - lastUpdateTime >= 2000) {
+      const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
+      latestSuggestion = analyzeRowing(keypoints);
+      lastUpdateTime = now;
+    }
+
+    resultsEl.textContent = latestSuggestion;
+  } else {
+    resultsEl.textContent = "No person detected.";
   }
 
-  drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color:'white', lineWidth:3});
-  drawLandmarks(ctx, results.poseLandmarks, {color:'red', lineWidth:2});
-
-  const keypoints = extractKeyLandmarks(results.poseLandmarks, canvas.width, canvas.height);
-  resultsEl.textContent = analyzeRowing(keypoints);
-  resultsEl.style.display = "block";
+  ctx.restore();
 }
