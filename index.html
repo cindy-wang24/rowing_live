@@ -1,28 +1,25 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>My First Website</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f8fafc;
-        color: #333;
-        text-align: center;
-        padding: 100px;
-      }
-      h1 {
-        color: #007acc;
-      }
-      a {
-        color: #007acc;
-        text-decoration: none;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Welcome to My Website!</h1>
-    <p>This page is hosted using <b>GitHub Pages</b>.</p>
-    <a href="about.html">Go to About Page →</a>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rowing Pose Analyzer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Rowing Pose Analyzer</h1>
+    <button id="uploadBtn">Upload & Analyze</button>
+
+    <p id="status"></p>
+
+    <div class="output">
+      <canvas id="canvas" style="display:none;"></canvas>
+      <pre id="results"></pre>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
 </html>
