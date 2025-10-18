@@ -22,36 +22,25 @@ pose.setOptions({
 
 pose.onResults(onResults);
 
-// --- Start button ---
 startBtn.addEventListener("click", async () => {
   startBtn.style.display = "none";      // hide Start button
   canvasEl.style.display = "block";     // show canvas
   resultsEl.style.display = "block";    // show feedback
 
-  // Default canvas size to prevent disappearing
-  canvasEl.width = 640;
-  canvasEl.height = 480;
-
-  // Start the camera
+  // Start camera using MediaPipe Camera util
   camera = new Camera(videoEl, {
     onFrame: async () => {
-      if (videoEl.videoWidth === 0) return; // wait for video to load
-
-      // mirrored video
-      canvasEl.width = videoEl.videoWidth || 640;
-      canvasEl.height = videoEl.videoHeight || 480;
-
-      ctx.save();
-      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-      ctx.scale(-1, 1); // mirror
-      ctx.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
-      ctx.restore();
-
-      await pose.send({ image: canvasEl });
+      await pose.send({ image: videoEl }); // send video frame to MediaPipe
     },
     width: 640,
     height: 480,
   });
+
+  // Wait for video to load and set canvas size
+  videoEl.onloadedmetadata = () => {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+  };
 
   camera.start();
 });
