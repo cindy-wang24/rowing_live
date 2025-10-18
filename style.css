@@ -5,20 +5,19 @@ body {
   text-align: center;
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .container {
-  width: 95%;
-  max-width: 1200px;
+  width: 90%;
+  max-width: 1000px;
 }
 
 h1 {
   font-size: 3em;
-  font-weight: bold;
   margin-bottom: 20px;
 }
 
@@ -33,7 +32,6 @@ button {
   transition: 0.2s;
   margin-bottom: 20px;
 }
-
 button:hover {
   background-color: #ddd;
 }
@@ -43,33 +41,29 @@ button:hover {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  margin-top: 20px;
 }
 
-#canvas, #results {
-  display: none; /* hidden initially */
-  border: none;
-  outline: none;
-  box-shadow: none;
+#canvas,
+#results {
+  display: none; /* hidden before start */
 }
 
 #canvas {
   width: 100%;
-  max-width: 100%;
   height: auto;
-  border-radius: 0;
+  border: none;
 }
 
 #results {
-  margin-top: 15px;
+  margin-top: 20px;
   font-size: 20px;
-  max-width: 100%;
-  width: 100%;
   background-color: #111;
+  color: white;
   padding: 15px;
-  border-radius: 0;
-  text-align: left;
+  width: 100%;
+  border-radius: 10px;
   white-space: pre-wrap;
+  text-align: left;
   overflow-y: auto;
-  max-height: 250px;
+  max-height: 300px;
 }
