@@ -47,12 +47,15 @@ button:hover {
 }
 
 #canvas, #results {
-  display: none;   /* fully hidden at first */
-  border: none;    /* ensure no border appears */
+  display: none;   /* hide initially */
+  border: none;    /* remove borders */
+  outline: none;   /* remove any outlines */
+  box-shadow: none; /* remove shadows that can appear as borders */
 }
+
 #canvas {
   max-width: 80%;
-  border-radius: 10px; /* optional rounded corners */
+  border-radius: 0; /* optional, can keep 0 for no visible rounding */
 }
 
 #results {
@@ -61,7 +64,7 @@ button:hover {
   max-width: 80%;
   background-color: #111;
   padding: 15px;
-  border-radius: 10px;
+  border-radius: 0;  /* optional, keep 0 if you want square edges */
   text-align: left;
   white-space: pre-wrap;
   overflow-y: auto;
