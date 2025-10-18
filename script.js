@@ -23,19 +23,26 @@ pose.onResults(onResults);
 
 // --- Start button ---
 startBtn.addEventListener("click", async () => {
-  startBtn.style.display = "none";      // hide start button
-  canvasEl.style.display = "block";     // show canvas
-  resultsEl.style.display = "block";    // show feedback
-
   // Get webcam
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   videoEl.srcObject = stream;
 
+  // Wait for video to load metadata
   videoEl.onloadedmetadata = () => {
-    canvasEl.width = videoEl.videoWidth;
-    canvasEl.height = videoEl.videoHeight;
+    // Scale canvas to container width
+    const containerWidth = canvasEl.parentElement.clientWidth;
+    const aspect = videoEl.videoHeight / videoEl.videoWidth;
+    canvasEl.width = containerWidth;
+    canvasEl.height = containerWidth * aspect;
 
-    // Start processing frames
+    // Now we can show canvas and feedback
+    canvasEl.style.display = "block";
+    resultsEl.style.display = "block";
+
+    // Hide start button
+    startBtn.style.display = "none";
+
+    // Start MediaPipe camera
     const camera = new Camera(videoEl, {
       onFrame: async () => {
         await pose.send({ image: videoEl });
