@@ -28,11 +28,18 @@ startBtn.addEventListener("click", async () => {
   canvasEl.style.display = "block";     // show canvas
   resultsEl.style.display = "block";    // show feedback
 
+  // Default canvas size to prevent disappearing
+  canvasEl.width = 640;
+  canvasEl.height = 480;
+
+  // Start the camera
   camera = new Camera(videoEl, {
     onFrame: async () => {
-      // mirrored video frame
-      canvasEl.width = videoEl.videoWidth;
-      canvasEl.height = videoEl.videoHeight;
+      if (videoEl.videoWidth === 0) return; // wait for video to load
+
+      // mirrored video
+      canvasEl.width = videoEl.videoWidth || 640;
+      canvasEl.height = videoEl.videoHeight || 480;
 
       ctx.save();
       ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
@@ -124,8 +131,9 @@ function onResults(results) {
     return;
   }
 
-  // flip landmarks for mirrored overlay
   const width = canvasEl.width;
+
+  // flip landmarks for mirrored overlay
   const flippedLandmarks = results.poseLandmarks.map(lm => ({
     x: 1 - lm.x,
     y: lm.y,
@@ -136,8 +144,9 @@ function onResults(results) {
   drawConnectors(ctx, flippedLandmarks, POSE_CONNECTIONS, { color: "white", lineWidth: 3 });
   drawLandmarks(ctx, flippedLandmarks, { color: "red", lineWidth: 2 });
 
+  // Update feedback every 2 seconds
   const now = Date.now();
-  if (now - lastUpdateTime >= 2000) { // update feedback every 2 seconds
+  if (now - lastUpdateTime >= 2000) {
     const keypoints = extractKeyLandmarks(flippedLandmarks, width, canvasEl.height);
     latestSuggestion = analyzeRowing(keypoints);
     lastUpdateTime = now;

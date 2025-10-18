@@ -39,29 +39,33 @@ button:hover {
 }
 
 .output {
-  display: flex;            /* use flex layout */
-  flex-direction: column;   /* stack children vertically */
-  align-items: center;      /* center everything horizontally */
-  width: 100%;              /* take full width */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   margin-top: 20px;
 }
 
+/* Hide initially and remove borders */
+#canvas, #results, #inputVideo {
+  display: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
 #canvas {
-  display: block;           /* ensures it’s on its own line */
-  max-width: 80%;           /* responsive width */
-  border: 2px solid white;
-  border-radius: 10px;
+  max-width: 80%;
+  border-radius: 0;
 }
 
 #results {
-  display: none;           
-  margin-top: 15px;         
+  margin-top: 15px;
   font-size: 20px;
-  max-width: 80%;           
+  max-width: 80%;
   background-color: #111;
   padding: 15px;
-  border-radius: 10px;
-  border: 1px solid white;
+  border-radius: 0;
   text-align: left;
   white-space: pre-wrap;
   overflow-y: auto;
