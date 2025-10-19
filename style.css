@@ -2,7 +2,7 @@ body, html {
   margin: 0;
   padding: 0;
   background-color: black;
-  overflow: hidden; /* hide scrollbars */
+  overflow: hidden;
   height: 100%;
   width: 100%;
   font-family: Arial, sans-serif;
@@ -15,23 +15,27 @@ body, html {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 3;
+  width: 100%;          /* make container full width */
+  max-width: 600px;     /* optional max width */
 }
 
 #title {
-  font-size: 3em; /* bigger title */
+  font-size: 4em;       /* bigger title */
   color: white;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
 #startBtn {
-  font-size: 2em; /* bigger button */
-  padding: 20px 50px; /* larger click area */
+  font-size: 2.5em;          /* large text */
+  padding: 30px 80px;         /* big button area */
   cursor: pointer;
   background-color: white;
   color: black;
   border: none;
-  border-radius: 12px;
+  border-radius: 15px;
   transition: 0.2s;
+  display: inline-block;
+  min-width: 250px;           /* ensure minimum width */
 }
 
 #startBtn:hover {
