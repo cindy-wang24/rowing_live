@@ -26,8 +26,18 @@ pose.setOptions({
 pose.onResults(onResults);
 
 startBtn.addEventListener("click", async () => {
+  // Hide everything except canvas
+  const container = document.getElementById("container");
+  const title = document.getElementById("title");
+  title.style.display = "none";
   startBtn.style.display = "none";
+
   resultsEl.textContent = "Starting camera...";
+
+  // Hidden video element
+  const videoEl = document.createElement("video");
+  videoEl.playsInline = true;
+  videoEl.style.display = "none";
 
   camera = new Camera(videoEl, {
     onFrame: async () => await pose.send({ image: videoEl }),
@@ -35,7 +45,6 @@ startBtn.addEventListener("click", async () => {
     height: 720,
   });
 
-  // Match canvas size to video
   videoEl.addEventListener("loadedmetadata", () => {
     canvasEl.width = videoEl.videoWidth;
     canvasEl.height = videoEl.videoHeight;
@@ -43,7 +52,6 @@ startBtn.addEventListener("click", async () => {
 
   camera.start();
 });
-
 // --- Helpers remain the same ---
 function extractKeyLandmarks(landmarks, width, height) {
   const keypoints = {

@@ -1,72 +1,30 @@
-body {
-  background-color: black;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
+body, html {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.container {
-  width: 95%;
-  max-width: 1200px; /* bigger max width */
-}
-
-h1 {
-  font-size: 3em;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-button {
-  font-size: 1.2em;
-  padding: 15px 30px;
-  cursor: pointer;
-  background-color: white;
-  color: black;
-  border: none;
-  border-radius: 8px;
-  transition: 0.2s;
-  margin-bottom: 20px;
-}
-
-button:hover {
-  background-color: #ddd;
-}
-
-.output {
-  display: flex;            
-  flex-direction: column;   
-  align-items: center;      
-  width: 100%;              
-  margin-top: 20px;
+  background-color: black;
+  overflow: hidden; /* hide scrollbars for full screen */
 }
 
 #canvas {
-  display: block;           
-  width: 100%;               /* fill container width */
-  max-width: 1280px;         /* max width */
-  height: auto;              /* maintain aspect ratio */
-  border: 2px solid white;
-  border-radius: 10px;
-  transform: scaleX(-1);     /* mirror canvas */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  transform: scaleX(-1); /* mirror canvas */
 }
 
 #results {
-  display: block;           
-  margin-top: 15px;         
-  font-size: 20px;
-  max-width: 80%;           
-  background-color: #111;
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  background-color: rgba(0,0,0,0.6);
   padding: 15px;
   border-radius: 10px;
-  border: 1px solid white;
-  text-align: left;
-  white-space: pre-wrap;
-  overflow-y: auto;
-  max-height: 200px;
+  color: white;
+  max-width: 90%;
+  text-align: center;
+  z-index: 10;
 }
