@@ -15,7 +15,8 @@ body, html {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 3;
-  width: auto;           /* make container full width */
+  width: auto;
+  max-width: none;           /* make container full width */
 }
 
 #title {
