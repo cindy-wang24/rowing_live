@@ -4,11 +4,10 @@ const canvasEl = document.getElementById("canvas");
 const resultsEl = document.getElementById("results");
 const ctx = canvasEl.getContext("2d");
 
-let camera = null;
 let lastUpdateTime = 0;
 let latestSuggestion = "Waiting for pose...";
 
-// --- Initialize MediaPipe Pose ---
+// Initialize Pose
 const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
@@ -20,40 +19,49 @@ pose.setOptions({
   minTrackingConfidence: 0.5,
 });
 
-// --- Start button handler ---
+pose.onResults(onResults);
+
+// Start button
 startBtn.addEventListener("click", async () => {
   startBtn.style.display = "none";
   resultsEl.textContent = "Starting camera...";
-  videoEl.style.display = "none"; // hide the raw video
+
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  videoEl.srcObject = stream;
+  await videoEl.play();
+
+  videoEl.width = videoEl.videoWidth;
+  videoEl.height = videoEl.videoHeight;
+  canvasEl.width = videoEl.videoWidth;
+  canvasEl.height = videoEl.videoHeight;
   canvasEl.style.display = "block";
 
-  camera = new Camera(videoEl, {
+  const camera = new Camera(videoEl, {
     onFrame: async () => {
-      // draw the frame to canvas first
-      ctx.save();
-      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-      ctx.scale(-1, 1); // flip horizontally
-      ctx.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
-      ctx.restore();
-
-      await pose.send({ image: canvasEl });
+      await pose.send({ image: videoEl });
     },
-    width: 640,
-    height: 480,
+    width: videoEl.videoWidth,
+    height: videoEl.videoHeight,
   });
 
   camera.start();
 });
 
-// --- MediaPipe Results ---
+// --- MediaPipe results handler ---
 function onResults(results) {
+  ctx.save();
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+  // Mirror horizontally
+  ctx.scale(-1, 1);
+  ctx.drawImage(results.image, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
+  ctx.restore();
+
   if (!results.poseLandmarks) {
     resultsEl.textContent = "No person detected.";
-    resultsEl.style.display = "block";
     return;
   }
 
-  // Draw the landmarks on the canvas only
   drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: "white", lineWidth: 3 });
   drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
 
@@ -65,10 +73,9 @@ function onResults(results) {
   }
 
   resultsEl.textContent = latestSuggestion;
-  resultsEl.style.display = "block";
 }
 
-// --- Helper: extract landmark coordinates ---
+// --- Helper: extract key landmarks ---
 function extractKeyLandmarks(landmarks, width, height) {
   const keypoints = {
     nose: 0, wrist_l: 15, wrist_r: 16,
@@ -85,7 +92,7 @@ function extractKeyLandmarks(landmarks, width, height) {
   return extracted;
 }
 
-// --- Helper: calculate angle between three points ---
+// --- Helper: compute angle ---
 function angle(p1, mid, p2) {
   const v1 = [p1[0] - mid[0], -(p1[1] - mid[1])];
   const v2 = [p2[0] - mid[0], -(p2[1] - mid[1])];
@@ -95,21 +102,20 @@ function angle(p1, mid, p2) {
   return Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
 }
 
-// --- Rowing analysis (your criteria) ---
+// --- Rowing feedback logic ---
 function analyzeRowing(keypoints) {
-  const nose = keypoints.nose;
   const wrist = keypoints.wrist_r;
   const shoulder = keypoints.shoulder_r;
   const hip = keypoints.hip_r;
   const knee = keypoints.knee_r;
   const elbow = keypoints.r_elbow;
 
-  let suggestion = "";
+  if (!wrist || !shoulder || !hip || !knee || !elbow) return "No clear pose.";
 
   const angleSEW = angle(shoulder, elbow, wrist);
   const angleHSW = angle(hip, shoulder, wrist);
+  let suggestion = "";
 
-  // “Great Rowing” checks
   if (
     Math.abs(elbow[0] - shoulder[0]) < Math.abs(elbow[1] - shoulder[1]) &&
     angleSEW > 180 &&
@@ -125,10 +131,7 @@ function analyzeRowing(keypoints) {
   } else {
     if (angleSEW < 90 && angleHSW < 30) {
       suggestion = "Lift your elbows 45° from your sides.";
-    } else if (
-      angleSEW < 90 &&
-      Math.abs(wrist[1] - hip[1]) > 0.7 * Math.abs(hip[1] - shoulder[1])
-    ) {
+    } else if (angleSEW < 90 && Math.abs(wrist[1] - hip[1]) > 0.7 * Math.abs(hip[1] - shoulder[1])) {
       suggestion = "Lean forward as your hands approach the front.";
     } else if (angleSEW > 150) {
       suggestion = "Keep your arms straight as you approach the front.";
@@ -138,32 +141,4 @@ function analyzeRowing(keypoints) {
   }
 
   return suggestion;
-}
-
-// --- MediaPipe Results (called every frame) ---
-function onResults(results) {
-  canvasEl.width = results.image.width;
-  canvasEl.height = results.image.height;
-
-  ctx.save();
-  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-  ctx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
-
-  if (results.poseLandmarks) {
-    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: "white", lineWidth: 3 });
-    drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
-
-    const now = Date.now();
-    if (now - lastUpdateTime >= 2000) {
-      const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
-      latestSuggestion = analyzeRowing(keypoints);
-      lastUpdateTime = now;
-    }
-
-    resultsEl.textContent = latestSuggestion;
-  } else {
-    resultsEl.textContent = "No person detected.";
-  }
-
-  ctx.restore();
 }
