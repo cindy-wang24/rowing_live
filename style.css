@@ -7,14 +7,35 @@ body, html {
   width: 100%;
 }
 
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 3;
+}
+
+#startBtn {
+  font-size: 1.5em;
+  padding: 15px 30px;
+  cursor: pointer;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
 #canvas {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;       /* full viewport width */
-  height: 100vh;      /* full viewport height */
-  transform: scaleX(-1); /* mirror canvas */
+  width: 100vw;
+  height: 100vh;
+  transform: scaleX(-1);
   z-index: 1;
+  display: none; /* hidden until start */
 }
 
 #results {
@@ -30,4 +51,5 @@ body, html {
   max-width: 90%;
   text-align: center;
   z-index: 2;
+  display: none; /* hidden until start */
 }

@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const startBtn = document.getElementById("startBtn");
+  const title = document.getElementById("title");
+  const container = document.getElementById("container");
   const canvasEl = document.getElementById("canvas");
   const resultsEl = document.getElementById("results");
   const ctx = canvasEl.getContext("2d");
@@ -21,26 +24,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   pose.onResults(onResults);
 
-  // Automatically start camera
-  const videoEl = document.createElement("video");
-  videoEl.playsInline = true;
-  videoEl.style.display = "none";
+  startBtn.addEventListener("click", async () => {
+    // Hide title and button
+    container.style.display = "none";
 
-  camera = new Camera(videoEl, {
-    onFrame: async () => await pose.send({ image: videoEl }),
-    width: 1920,
-    height: 1080,
+    // Show canvas and results
+    canvasEl.style.display = "block";
+    resultsEl.style.display = "block";
+
+    const videoEl = document.createElement("video");
+    videoEl.playsInline = true;
+    videoEl.style.display = "none";
+
+    camera = new Camera(videoEl, {
+      onFrame: async () => await pose.send({ image: videoEl }),
+      width: 1920,
+      height: 1080,
+    });
+
+    videoEl.addEventListener("loadedmetadata", () => {
+      canvasEl.width = videoEl.videoWidth;
+      canvasEl.height = videoEl.videoHeight;
+    });
+
+    camera.start();
   });
-
-  videoEl.addEventListener("loadedmetadata", () => {
-    canvasEl.width = videoEl.videoWidth;
-    canvasEl.height = videoEl.videoHeight;
-  });
-
-  camera.start();
 
   // --- Helpers ---
-
   function extractKeyLandmarks(landmarks, width, height) {
     const keypoints = {
       nose: 0, wrist_l: 15, wrist_r: 16,
@@ -67,15 +77,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function analyzeRowing(keypoints) {
-    const nose = keypoints.nose;
     const wrist = keypoints.wrist_r;
     const shoulder = keypoints.shoulder_r;
     const hip = keypoints.hip_r;
-    const knee = keypoints.knee_r;
     const elbow = keypoints.r_elbow;
 
     let suggestion = "";
-
     const angleSEW = angle(shoulder, elbow, wrist);
     const angleHSW = angle(hip, shoulder, wrist);
 
