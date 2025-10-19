@@ -1,125 +1,169 @@
 const startBtn = document.getElementById("startBtn");
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const videoEl = document.getElementById("inputVideo");
+const canvasEl = document.getElementById("canvas");
 const resultsEl = document.getElementById("results");
+const ctx = canvasEl.getContext("2d");
 
-let lastFeedbackTime = 0;
+let camera = null;
+let lastUpdateTime = 0;
+let latestSuggestion = "Waiting for pose...";
 
-// Initialize MediaPipe Pose
+// --- Initialize MediaPipe Pose ---
 const pose = new Pose({
-  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
+
 pose.setOptions({
   modelComplexity: 1,
   smoothLandmarks: true,
   minDetectionConfidence: 0.5,
-  minTrackingConfidence: 0.5
+  minTrackingConfidence: 0.5,
 });
-pose.onResults(onResults);
 
+// --- Start button handler ---
 startBtn.addEventListener("click", async () => {
   startBtn.style.display = "none";
   resultsEl.textContent = "Starting camera...";
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
-  video.play();
-  video.style.display = "none"; // hide raw video
-  resultsEl.textContent = "Analyzing rowing posture...";
-  startCamera();
-});
+  videoEl.style.display = "none"; // hide the raw video
+  canvasEl.style.display = "block";
 
-function startCamera() {
-  const camera = new Camera(video, {
+  camera = new Camera(videoEl, {
     onFrame: async () => {
-      await pose.send({ image: video });
+      // draw the frame to canvas first
+      ctx.save();
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      ctx.scale(-1, 1); // flip horizontally
+      ctx.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
+      ctx.restore();
+
+      await pose.send({ image: canvasEl });
     },
     width: 640,
-    height: 480
+    height: 480,
   });
+
   camera.start();
+});
+
+// --- MediaPipe Results ---
+function onResults(results) {
+  if (!results.poseLandmarks) {
+    resultsEl.textContent = "No person detected.";
+    resultsEl.style.display = "block";
+    return;
+  }
+
+  // Draw the landmarks on the canvas only
+  drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: "white", lineWidth: 3 });
+  drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
+
+  const now = Date.now();
+  if (now - lastUpdateTime >= 2000) {
+    const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
+    latestSuggestion = analyzeRowing(keypoints);
+    lastUpdateTime = now;
+  }
+
+  resultsEl.textContent = latestSuggestion;
+  resultsEl.style.display = "block";
 }
 
-// ---- Helper functions ----
-
+// --- Helper: extract landmark coordinates ---
 function extractKeyLandmarks(landmarks, width, height) {
   const keypoints = {
-    nose: 0, wrist_r: 16, shoulder_r: 12,
-    hip_r: 24, knee_r: 26, r_elbow: 14
+    nose: 0, wrist_l: 15, wrist_r: 16,
+    shoulder_l: 11, shoulder_r: 12,
+    l_elbow: 13, r_elbow: 14,
+    hip_l: 23, hip_r: 24,
+    knee_l: 25, knee_r: 26,
+    ankle_l: 27, ankle_r: 28
   };
   const extracted = {};
   for (let [k, i] of Object.entries(keypoints)) {
-    extracted[k] = {
-      x: landmarks[i].x * width,
-      y: landmarks[i].y * height
-    };
+    extracted[k] = [landmarks[i].x * width, landmarks[i].y * height];
   }
   return extracted;
 }
 
+// --- Helper: calculate angle between three points ---
 function angle(p1, mid, p2) {
-  const v1 = [p1.x - mid.x, -(p1.y - mid.y)];
-  const v2 = [p2.x - mid.x, -(p2.y - mid.y)];
-  const dot = v1[0]*v2[0] + v1[1]*v2[1];
+  const v1 = [p1[0] - mid[0], -(p1[1] - mid[1])];
+  const v2 = [p2[0] - mid[0], -(p2[1] - mid[1])];
+  const dot = v1[0] * v2[0] + v1[1] * v2[1];
   const mag1 = Math.hypot(v1[0], v1[1]);
   const mag2 = Math.hypot(v2[0], v2[1]);
   return Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
 }
 
-// ---- Rowing feedback logic (YOUR ORIGINAL CONDITIONS) ----
-function analyzeRowing(kp) {
-  const wrist = kp.wrist_r;
-  const shoulder = kp.shoulder_r;
-  const hip = kp.hip_r;
-  const knee = kp.knee_r;
-  const elbow = kp.r_elbow;
+// --- Rowing analysis (your criteria) ---
+function analyzeRowing(keypoints) {
+  const nose = keypoints.nose;
+  const wrist = keypoints.wrist_r;
+  const shoulder = keypoints.shoulder_r;
+  const hip = keypoints.hip_r;
+  const knee = keypoints.knee_r;
+  const elbow = keypoints.r_elbow;
 
+  let suggestion = "";
+
+  const angleSEW = angle(shoulder, elbow, wrist);
+  const angleHSW = angle(hip, shoulder, wrist);
+
+  // “Great Rowing” checks
   if (
-    Math.abs(elbow.x - shoulder.x) < Math.abs(elbow.y - shoulder.y) &&
-    angle(shoulder, elbow, wrist) > 180 &&
-    Math.abs(wrist.y - hip.y) < 0.7 * Math.abs(wrist.y - shoulder.y)
+    Math.abs(elbow[0] - shoulder[0]) < Math.abs(elbow[1] - shoulder[1]) &&
+    angleSEW > 180 &&
+    Math.abs(wrist[1] - hip[1]) < 0.7 * Math.abs(wrist[1] - shoulder[1])
   ) {
-    return "Great Rowing!";
+    suggestion = "Great Rowing!";
   } else if (
-    Math.abs(elbow.x - shoulder.x) > Math.abs(elbow.y - shoulder.y) &&
-    angle(shoulder, elbow, wrist) < 70 &&
-    Math.abs(wrist.y - hip.y) > Math.abs(wrist.y - shoulder.y)
+    Math.abs(elbow[0] - shoulder[0]) > Math.abs(elbow[1] - shoulder[1]) &&
+    angleSEW < 70 &&
+    Math.abs(wrist[1] - hip[1]) > Math.abs(wrist[1] - shoulder[1])
   ) {
-    return "Great Rowing!";
+    suggestion = "Great Rowing!";
   } else {
-    if (angle(shoulder, elbow, wrist) < 90 && angle(hip, shoulder, wrist) < 30) {
-      return "Lift your elbows 45 degrees from your sides.";
+    if (angleSEW < 90 && angleHSW < 30) {
+      suggestion = "Lift your elbows 45° from your sides.";
     } else if (
-      angle(shoulder, elbow, wrist) < 90 &&
-      Math.abs(wrist.y - hip.y) > 0.7 * Math.abs(hip.y - shoulder.y)
+      angleSEW < 90 &&
+      Math.abs(wrist[1] - hip[1]) > 0.7 * Math.abs(hip[1] - shoulder[1])
     ) {
-      return "Lean forward as your hands approach the front.";
-    } else if (angle(shoulder, elbow, wrist) > 150) {
-      return "Keep your arms straight as you approach the front.";
+      suggestion = "Lean forward as your hands approach the front.";
+    } else if (angleSEW > 150) {
+      suggestion = "Keep your arms straight as you approach the front.";
     } else {
-      return "Adjust your form slightly.";
+      suggestion = "Adjust your form.";
     }
   }
+
+  return suggestion;
 }
 
-// ---- MediaPipe results handler ----
+// --- MediaPipe Results (called every frame) ---
 function onResults(results) {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvasEl.width = results.image.width;
+  canvasEl.height = results.image.height;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  ctx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
 
-  if (!results.poseLandmarks) return;
+  if (results.poseLandmarks) {
+    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: "white", lineWidth: 3 });
+    drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
 
-  drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: 'white', lineWidth: 3 });
-  drawLandmarks(ctx, results.poseLandmarks, { color: 'red', lineWidth: 2 });
+    const now = Date.now();
+    if (now - lastUpdateTime >= 2000) {
+      const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
+      latestSuggestion = analyzeRowing(keypoints);
+      lastUpdateTime = now;
+    }
 
-  const now = Date.now();
-  if (now - lastFeedbackTime > 2000) { // once every 2 seconds
-    const kp = extractKeyLandmarks(results.poseLandmarks, canvas.width, canvas.height);
-    const feedback = analyzeRowing(kp);
-    resultsEl.textContent = feedback;
-    lastFeedbackTime = now;
+    resultsEl.textContent = latestSuggestion;
+  } else {
+    resultsEl.textContent = "No person detected.";
   }
+
+  ctx.restore();
 }
