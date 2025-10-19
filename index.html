@@ -2,18 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rowing Feedback</title>
+  <title>Rowing Pose Analyzer (Live)</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 </head>
 <body>
-  <h1>Rowing Feedback</h1>
-  <button id="startBtn">Start</button>
-  <video id="inputVideo" style="display:none;"></video>
-  <canvas id="canvas"></canvas>
-  <div id="results">Waiting for pose...</div>
+  <div class="container">
+    <h1>Rowing Pose Analyzer (Live)</h1>
+    <button id="startBtn">Start Camera</button>
+    <p id="status"></p>
+
+    <div class="output">
+      <canvas id="canvas"></canvas>
+      <pre id="results"></pre>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

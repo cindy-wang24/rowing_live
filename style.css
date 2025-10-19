@@ -1,41 +1,70 @@
 body {
-  background: black;
+  background-color: black;
   color: white;
-  font-family: sans-serif;
+  font-family: Arial, sans-serif;
   text-align: center;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 90%;
+  max-width: 900px;
 }
 
 h1 {
-  margin: 20px;
-  font-size: 2em;
+  font-size: 3em;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+button {
+  font-size: 1.2em;
+  padding: 15px 30px;
+  cursor: pointer;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  transition: 0.2s;
+  margin-bottom: 20px;
+}
+
+button:hover {
+  background-color: #ddd;
+}
+
+.output {
+  display: flex;            
+  flex-direction: column;   
+  align-items: center;      
+  width: 100%;              
+  margin-top: 20px;
 }
 
 #canvas {
-  display: none;
-  margin-top: 10px;
+  display: block;           
+  max-width: 100%;          
   border: 2px solid white;
   border-radius: 10px;
-  max-width: 90%;
+  transform: scaleX(-1);    /* mirror the canvas */
 }
 
 #results {
-  margin-top: 15px;
-  font-size: 1.4em;
-}
-
-#startBtn {
-  background: white;
-  color: black;
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.2em;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-#startBtn:hover {
-  background: #ddd;
+  display: block;           
+  margin-top: 15px;         
+  font-size: 20px;
+  max-width: 80%;           
+  background-color: #111;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid white;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  max-height: 200px;
 }
