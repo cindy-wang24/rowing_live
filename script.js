@@ -31,8 +31,8 @@ startBtn.addEventListener("click", async () => {
 
   camera = new Camera(videoEl, {
     onFrame: async () => await pose.send({ image: videoEl }),
-    width: 640,
-    height: 480,
+    width: 1280,
+    height: 720,
   });
 
   // Match canvas size to video
@@ -106,7 +106,7 @@ function analyzeRowing(keypoints) {
     } else if (angleSEW > 150) {
       suggestion = "Keep your arms straight as you approach the front.";
     } else {
-      suggestion = "Adjust your form.";
+      suggestion = "Great Rowing!";
     }
   }
 
