@@ -31,8 +31,3 @@ body, html {
   text-align: center;
   z-index: 2;
 }
-
-button, h1, #status {
-  position: relative;
-  z-index: 3;
-}

@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const startBtn = document.getElementById("startBtn");
-  const title = document.getElementById("title");
   const canvasEl = document.getElementById("canvas");
   const resultsEl = document.getElementById("results");
   const ctx = canvasEl.getContext("2d");
@@ -23,28 +21,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   pose.onResults(onResults);
 
-  startBtn.addEventListener("click", async () => {
-    // Hide everything except canvas and results
-    title.style.display = "none";
-    startBtn.style.display = "none";
+  // Automatically start camera
+  const videoEl = document.createElement("video");
+  videoEl.playsInline = true;
+  videoEl.style.display = "none";
 
-    const videoEl = document.createElement("video");
-    videoEl.playsInline = true;
-    videoEl.style.display = "none";
-
-    camera = new Camera(videoEl, {
-      onFrame: async () => await pose.send({ image: videoEl }),
-      width: 1920,   // high resolution
-      height: 1080,  // high resolution
-    });
-
-    videoEl.addEventListener("loadedmetadata", () => {
-      canvasEl.width = videoEl.videoWidth;
-      canvasEl.height = videoEl.videoHeight;
-    });
-
-    camera.start();
+  camera = new Camera(videoEl, {
+    onFrame: async () => await pose.send({ image: videoEl }),
+    width: 1920,
+    height: 1080,
   });
+
+  videoEl.addEventListener("loadedmetadata", () => {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+  });
+
+  camera.start();
 
   // --- Helpers ---
 
@@ -129,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
 
       const now = Date.now();
-      if (now - lastUpdateTime >= 2000) {
+      if (now - lastUpdateTime >= 1000) { // every 1 second
         const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
         latestSuggestion = analyzeRowing(keypoints);
         lastUpdateTime = now;
