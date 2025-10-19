@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (angleSEW > 150) {
         suggestion = "Keep your arms straight as you approach the front.";
       } else {
-        suggestion = "Great Rowing!";
+        suggestion = "Adjust your form";
       }
     }
 
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
       drawLandmarks(ctx, results.poseLandmarks, { color: "red", lineWidth: 2 });
 
       const now = Date.now();
-      if (now - lastUpdateTime >= 1000) { // every 1 second
+      if (now - lastUpdateTime >= 2000) { 
         const keypoints = extractKeyLandmarks(results.poseLandmarks, canvasEl.width, canvasEl.height);
         latestSuggestion = analyzeRowing(keypoints);
         lastUpdateTime = now;
