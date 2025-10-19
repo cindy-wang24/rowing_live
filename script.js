@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (angleSEW > 150) {
         suggestion = "Keep your arms straight as you approach the front.";
       } else {
-        suggestion = "Great Rowing";
+        suggestion = "Great Rowing!";
       }
     }
 
