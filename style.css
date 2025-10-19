@@ -23,6 +23,7 @@ body, html {
   font-size: 4em;       /* bigger title */
   color: white;
   margin-bottom: 50px;
+  white-space: nowrap;
 }
 
 #startBtn {
