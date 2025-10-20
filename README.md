@@ -1,0 +1,2 @@
+Overview
+This project uses MediaPipe Pose and JavaScript to analyze a user’s rowing form in real time. It runs entirely in the browser using a webcam feed and gives live feedback based on body landmarks — no external installation required.
